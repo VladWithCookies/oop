@@ -18,17 +18,11 @@ class Library
   end
 
   def load_library  
-    load('book')
-    load('reader')
-    load('author')
-    load('order')
+    %w(book reader author order).each { |e| load(e)}
   end
 
   def save_library
-    save('book')
-    save('reader')
-    save('author')
-    save('order')
+    %w(book reader author order).each { |e| save(e)}
   end
 
   def save(class_name) 
@@ -36,8 +30,7 @@ class Library
     File.truncate(filename, 0)
     array = instance_variable_get("@#{class_name}s")
     array.each do |obj|
-      data = []
-      obj.instance_variables.map { |name| data << obj.instance_variable_get(name) }
+      data = obj.instance_variables.map { |name| obj.instance_variable_get(name) }
       File.open(filename, 'a+') do |file|
         file.puts data.join(' - ')
       end
@@ -52,45 +45,23 @@ class Library
   end
 
   def get_ordered_books
-    ordered_books = []
-    @orders.map { |order| ordered_books << order.book_title}
-    ordered_books
+    ordered_books = @orders.map { |o| o.book_title}
   end
 
   def who_often_takes_the_book(book_title)
-    readers = []
-    @orders.map { |order| readers << order.reader if order.book_title == book_title }  
-    return mode(readers)
+    mode(@orders.select { |o| o.book_title == book_title }).reader
   end
 
   def most_popular_books(n)
-    ordered_books = get_ordered_books
-    most_popular = []
-    n.times do
-      most_popular << mode(ordered_books)
-      ordered_books.delete(mode(ordered_books))
-    end
-    most_popular  
+    mode(@orders).book_title
   end
 
   def popular_books_orders_count(n)
-    most_popular = most_popular_books(n)
-    count = 0
-    n.times do
-      readers = []
-      @orders.each do |order|
-        if !readers.include?(order.reader) && order.book_title == most_popular.first
-          count += 1
-          readers << order.reader
-        end
-      end
-      most_popular.shift
-    end
-    return count
+    @orders.group_by { |o| o.book_title }.sort_by	{ |k, v| v.length }.to_h.values.flatten.uniq { |o| o.reader }.count
   end
 
   private 
     def mode(array)
-      array.group_by { |e| e }.values.max_by(&:size).first
+      array.group_by { |e| e }.values.max_by(&:count).first
     end
 end
