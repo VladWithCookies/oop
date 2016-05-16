@@ -44,24 +44,15 @@ class Library
     end  
   end
 
-  def get_ordered_books
-    ordered_books = @orders.map { |o| o.book_title}
-  end
-
   def who_often_takes_the_book(book_title)
-    mode(@orders.select { |o| o.book_title == book_title }).reader
+    @orders.select { |o| o.book_title == book_title }.group_by { |o| o.reader }.values.max_by(&:count).first.reader
   end
 
-  def most_popular_books(n)
-    mode(@orders).book_title
+  def most_popular_book
+    @orders.group_by { |o| o.book_title}.values.max_by(&:count).first.book_title
   end
 
   def popular_books_orders_count(n)
-    @orders.group_by { |o| o.book_title }.sort_by	{ |k, v| v.length }.to_h.values.flatten.uniq { |o| o.reader }.count
+    @orders.group_by { |o| o.book_title }.sort_by { |k, v| v.length }.last(n).to_h.values.flatten.uniq { |o| o.reader }.count
   end
-
-  private 
-    def mode(array)
-      array.group_by { |e| e }.values.max_by(&:count).first
-    end
 end
