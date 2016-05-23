@@ -49,10 +49,15 @@ class Library
   end
 
   def most_popular_book
-    @orders.group_by { |o| o.book_title}.values.max_by(&:count).first.book_title
+    get_ordered_books.values.max_by(&:count).first.book_title
   end
 
   def popular_books_orders_count(n)
-    @orders.group_by { |o| o.book_title }.sort_by { |k, v| v.length }.last(n).to_h.values.flatten.uniq { |o| o.reader }.count
+    get_ordered_books.sort_by { |k, v| v.length }.last(n).to_h.values.flatten.uniq { |o| o.reader }.count
   end
+
+  private 
+    def get_ordered_books 
+      @orders.group_by { |o| o.book_title} 
+    end
 end
